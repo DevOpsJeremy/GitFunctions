@@ -1,18 +1,23 @@
 <#
 .SYNOPSIS
-    A short one-line action-based description, e.g. 'Tests if a function is valid'
-.DESCRIPTION
-    A longer description of the function, its purpose, common use cases, etc.
-.NOTES
-    Information or caveats about the function e.g. 'This function is not supported in Linux'
-.LINK
-    Specify a URI to a help page, this will show when Get-Help -Online is used.
+    An assortment of functions for working with Git.
 .EXAMPLE
-    Test-MyTestFunction -Verbose
-    Explanation of the function or its result. You can include multiple examples with additional .EXAMPLE lines
+    . .\git.ps1
+    Imports the Git functions.
 #>
 
 function gitACP {
+    <#
+        .SYNOPSIS
+        Runs `git add -A`, `git commit -m $Message`, and `git push` in one command.
+        .EXAMPLE
+        gitACP 'Added new file'
+        This runs `git add -A` to add all modified files to the commit. It then runs `git commit -m 'Added new file'`. Finally, it pushes the changes to the remote destination with `git push`.
+        .EXAMPLE
+        gitACP 'Added new file' -Submodules
+        With the `-Submodules` switch, this pulls in all new updates from any submodules. It then runs `git add -A` to add all modified files to the commit. It then runs `git commit -m 'Added new file'`. Finally, it pushes the changes to the remote destination with `git push`.
+    #>
+    [CmdletBinding()]
     param (
         [Parameter(
             Mandatory = $true
@@ -32,6 +37,11 @@ function gitACP {
     }
 }
 function gitSwitchBack {
+    <#
+        .SYNOPSIS
+        Switches to the specified branch, then waits for instruction to switch back to the original branch.
+    #>
+    [CmdletBinding()]
     param (
         [Parameter(
             Mandatory = $true,
@@ -56,6 +66,11 @@ function gitSwitchBack {
     }
 }
 function gitSingleFile {
+    <#
+        .SYNOPSIS
+        Clones a single file from a repository.
+    #>
+    [CmdletBinding()]
     param (
         [ValidateScript({
             if (!($_ -match "\.git$")){
@@ -74,9 +89,9 @@ function gitSingleFile {
     $RepoNameSplit.Remove($RepoNameSplit[-1])
     [string]$RepoName = $RepoNameSplit -join '.'
     git clone -n $RepoPath --depth 1
-    Set-Location "$CurrentDir/$RepoName"
+    Push-Location -Path "$CurrentDir/$RepoName"
     git checkout HEAD "./$FilePath"
-    Set-Location $CurrentDir
+    Pop-Location
     $ErrorActionPreference = $CurrentEA
     return (Get-Item "$CurrentDir/$RepoName/$FilePath")
 }
