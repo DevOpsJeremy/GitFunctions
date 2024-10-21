@@ -26,15 +26,35 @@ function gitACP {
         [switch] $Submodules
     )
     git status -s
-    if ($?){
-        if ($Submodules){
-            git submodule update --remote --recursive 
-        }
-        git add -A
-        git status -s
-        git commit -m $Message
-        git push
+    if (!$?){
+        return
     }
+    if ($Submodules){
+        git submodule update --remote --recursive 
+    }
+    git add -A
+    git status -s
+    git commit -m $Message
+    git push
+}
+function gitSquash {
+    [CmdletBinding()]
+    param (
+        [Parameter(
+            Mandatory = $true,
+            Alias = 'SquashMessage'
+        )]
+        [string] $Message,
+        [string] $SourceBranch = 'main'
+    )
+    git status -s
+    if (!$?){
+        return
+    }
+    git reset $(git merge-base $SourceBranch $(git branch --show-current))
+    git add -A
+    git commit -m $Message
+    git push --force-with-lease
 }
 function gitSwitchBack {
     <#
