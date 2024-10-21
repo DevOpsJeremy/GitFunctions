@@ -40,9 +40,9 @@ function gitACP {
 function gitSquash {
     [CmdletBinding()]
     param (
+        [Alias("SquashMessage")]
         [Parameter(
-            Mandatory = $true,
-            Alias = 'SquashMessage'
+            Mandatory = $true
         )]
         [string] $Message,
         [string] $SourceBranch = 'main'
