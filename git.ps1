@@ -17,6 +17,7 @@ function gitACP {
         gitACP 'Added new file' -Submodules
         With the `-Submodules` switch, this pulls in all new updates from any submodules. It then runs `git add -A` to add all modified files to the commit. It then runs `git commit -m 'Added new file'`. Finally, it pushes the changes to the remote destination with `git push`.
     #>
+    [Alias('acp')]
     [CmdletBinding()]
     param (
         [Parameter(
@@ -26,35 +27,15 @@ function gitACP {
         [switch] $Submodules
     )
     git status -s
-    if (!$?){
-        return
+    if ($?){
+        if ($Submodules){
+            git submodule update --remote --recursive 
+        }
+        git add -A
+        git status -s
+        git commit -m $Message
+        git push
     }
-    if ($Submodules){
-        git submodule update --remote --recursive 
-    }
-    git add -A
-    git status -s
-    git commit -m $Message
-    git push
-}
-function gitSquash {
-    [CmdletBinding()]
-    param (
-        [Alias("SquashMessage")]
-        [Parameter(
-            Mandatory = $true
-        )]
-        [string] $Message,
-        [string] $SourceBranch = 'main'
-    )
-    git status -s
-    if (!$?){
-        return
-    }
-    git reset $(git merge-base $SourceBranch $(git branch --show-current))
-    git add -A
-    git commit -m $Message
-    git push --force-with-lease
 }
 function gitSwitchBack {
     <#
@@ -114,4 +95,27 @@ function gitSingleFile {
     Pop-Location
     $ErrorActionPreference = $CurrentEA
     return (Get-Item "$CurrentDir/$RepoName/$FilePath")
+}
+$gitCmdList = @(
+    'switch'
+    'branch'
+    'clone'
+    'clean'
+    'prune'
+    'reset'
+    'config'
+    'status'
+    'log'
+    'show'
+    'pull'
+    'push'
+    'commit'
+    'diff'
+    'checkout'
+    'add'
+)
+foreach ($gitCmd in $gitCmdList) {
+    if (-not (Get-Command $gitCmd -ErrorAction SilentlyContinue)) {
+        Set-Content -Path function:\$gitCmd -Value "git $gitCmd @args"
+    }
 }
